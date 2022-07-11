@@ -48,7 +48,7 @@ public class UserController extends BaseController{
 
         //将登陆凭证加入到用户登陆成功的session内
         this.httpServletRequest.getSession().setAttribute("IS_LOGIN", true);
-        this.httpServletRequest.getSession().setAttribute("lOGIN_USER",userModel);
+        this.httpServletRequest.getSession().setAttribute("LOGIN_USER",userModel);
 
         return CommonReturnType.create(null);
     }
