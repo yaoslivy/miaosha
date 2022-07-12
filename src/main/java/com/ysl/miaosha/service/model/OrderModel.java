@@ -25,6 +25,8 @@ public class OrderModel {
     //购买金额,若promoId非空，则表示秒杀商品价格
     private BigDecimal orderPrice;
 
+
+
     public String getId() {
         return id;
     }

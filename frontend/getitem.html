@@ -136,7 +136,30 @@
 		$("#price").text(g_itemVO.price);
 		$("#stock").text(g_itemVO.stock);
 		$("#sales").text(g_itemVO.sales);
-		
+		if (g_itemVO.promoStatus == 1) {
+			// 秒杀活动还未开始
+			console.log(g_itemVO.startDate);
+			var startTime = g_itemVO.startDate.replace(new RegExp("-", "gm"), "/");
+			startTime = (new Date(startTime)).getTime();
+			var nowTime = Date.parse(new Date());
+			var delta = (startTime - nowTime) / 1000;
+			if (delta <= 0) {
+				// 活动开始了
+				g_itemVO.promoStatus = 2;
+				reloadDom();
+			}
+
+			$("#promoStartDate").text("秒杀活动将于："+g_itemVO.startDate+" 开始售卖 倒计时："+delta+"  秒");
+			$("#promoPrice").text(g_itemVO.promoPrice);
+			$("#createOrder").attr("disabled", true);
+		} else if (g_itemVO.promoStatus == 2) {
+			// 秒杀活动进行中
+			$("#promoStartDate").text("秒杀活动进行中");
+			$("#promoPrice").text(g_itemVO.promoPrice);
+
+			$("#createOrder").attr("disabled", false);
+			$("#normalPriceContainer").hide();
+		}
 	}
 
 	function getParam(paramName) {            

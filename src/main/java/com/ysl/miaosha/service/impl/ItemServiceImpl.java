@@ -7,7 +7,9 @@ import com.ysl.miaosha.dataobject.ItemStockDO;
 import com.ysl.miaosha.error.BusinessException;
 import com.ysl.miaosha.error.EmBusinessError;
 import com.ysl.miaosha.service.ItemService;
+import com.ysl.miaosha.service.PromoService;
 import com.ysl.miaosha.service.model.ItemModel;
+import com.ysl.miaosha.service.model.PromoModel;
 import com.ysl.miaosha.validator.ValidationResult;
 import com.ysl.miaosha.validator.ValidatorImpl;
 import org.springframework.beans.BeanUtils;
@@ -28,6 +30,8 @@ public class ItemServiceImpl implements ItemService {
     private ItemStockDOMapper itemStockDOMapper;
     @Autowired
     private ItemDOMapper itemDOMapper;
+    @Autowired
+    private PromoService promoService;
 
     @Override
     public boolean decreaseStock(Integer itemId, Integer amount) throws BusinessException {
@@ -116,10 +120,10 @@ public class ItemServiceImpl implements ItemService {
         ItemModel itemModel = convertModelFromDataObject(itemDO,itemStockDO);
 
         //获取活动商品信息
-//        PromoModel promoModel = promoService.getPromoByItemId(itemModel.getId());
-//        if(promoModel != null && promoModel.getStatus().intValue() != 3){
-//            itemModel.setPromoModel(promoModel);
-//        }
+        PromoModel promoModel = promoService.getPromoByItemId(itemModel.getId());
+        if(promoModel != null && promoModel.getStatus().intValue() != 3){
+            itemModel.setPromoModel(promoModel);
+        }
         return itemModel;
     }
 
