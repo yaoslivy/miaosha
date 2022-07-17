@@ -4,6 +4,7 @@ package com.ysl.miaosha.controller;
 import com.ysl.miaosha.controller.viewobject.ItemVO;
 import com.ysl.miaosha.error.BusinessException;
 import com.ysl.miaosha.response.CommonReturnType;
+import com.ysl.miaosha.service.CacheService;
 import com.ysl.miaosha.service.ItemService;
 import com.ysl.miaosha.service.model.ItemModel;
 import org.joda.time.format.DateTimeFormat;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -27,6 +29,9 @@ public class ItemController extends BaseController{
 
     @Autowired
     private RedisTemplate redisTemplate;
+
+    @Autowired
+    private CacheService cacheService;
 
     //列表页面浏览
     @RequestMapping(value = "/list",method = {RequestMethod.GET})
@@ -46,15 +51,24 @@ public class ItemController extends BaseController{
     @RequestMapping(value = "/get",method = {RequestMethod.GET})
     @ResponseBody
     public CommonReturnType getItem(@RequestParam(name = "id")Integer id) {
-        //根据商品id到redis内获取
-        ItemModel itemModel = (ItemModel) redisTemplate.opsForValue().get("item_" + id);
-        //若redis内不存在对应的itemModel，，则访问下游service
+        ItemModel itemModel = null;
+        //先取本地缓存
+        itemModel = (ItemModel) cacheService.getFromCommonCache("item_" + id);
         if (itemModel == null) {
-            itemModel = itemService.getItemById(id);
-            //设置itemModel到redis内
-            redisTemplate.opsForValue().set("item_"+id,itemModel);
-            // 不管数据库中的数据有没有改变，10分钟后失效
-            redisTemplate.expire("item_"+id,10, TimeUnit.MINUTES);
+            System.out.println("本地缓存没有"+ new Date());
+            //根据商品id到redis内获取
+            itemModel = (ItemModel) redisTemplate.opsForValue().get("item_" + id);
+
+            //若redis内不存在对应的itemModel，，则访问下游service
+            if (itemModel == null) {
+                itemModel = itemService.getItemById(id);
+                //设置itemModel到redis内
+                redisTemplate.opsForValue().set("item_"+id,itemModel);
+                // 不管数据库中的数据有没有改变，10分钟后失效
+                redisTemplate.expire("item_"+id,10, TimeUnit.MINUTES);
+            }
+            //设置本地缓存
+            cacheService.setCommonCache("item_" + id, itemModel);
         }
 
         ItemVO itemVO = convertVOFromModel(itemModel);
