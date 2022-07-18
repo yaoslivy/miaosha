@@ -6,20 +6,27 @@ import com.ysl.miaosha.dataobject.ItemDO;
 import com.ysl.miaosha.dataobject.ItemStockDO;
 import com.ysl.miaosha.error.BusinessException;
 import com.ysl.miaosha.error.EmBusinessError;
+import com.ysl.miaosha.mq.MqProducer;
 import com.ysl.miaosha.service.ItemService;
 import com.ysl.miaosha.service.PromoService;
 import com.ysl.miaosha.service.model.ItemModel;
 import com.ysl.miaosha.service.model.PromoModel;
 import com.ysl.miaosha.validator.ValidationResult;
 import com.ysl.miaosha.validator.ValidatorImpl;
+import org.apache.rocketmq.client.exception.MQBrokerException;
+import org.apache.rocketmq.client.exception.MQClientException;
+import org.apache.rocketmq.client.producer.SendResult;
+import org.apache.rocketmq.remoting.exception.RemotingException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,15 +39,27 @@ public class ItemServiceImpl implements ItemService {
     private ItemDOMapper itemDOMapper;
     @Autowired
     private PromoService promoService;
+    @Autowired
+    private RedisTemplate redisTemplate;
+    @Autowired
+    private MqProducer mqProducer;
 
     @Override
     public boolean decreaseStock(Integer itemId, Integer amount) throws BusinessException {
-        int affectedRow = itemStockDOMapper.decreaseStock(itemId, amount);
+//        int affectedRow = itemStockDOMapper.decreaseStock(itemId, amount);
+        Long affectedRow = redisTemplate.opsForValue().increment("promo_item_stock_" + itemId, amount.intValue() * -1);
         if(affectedRow > 0){
             //更新库存成功
+            boolean mqResult = mqProducer.asyncReduceStock(itemId, amount);
+            if (!mqResult) {
+                redisTemplate.opsForValue().increment("promo_item_stock_" + itemId, amount.intValue());
+                return false;
+            }
+
             return true;
         }else{
             //更新库存失败
+            redisTemplate.opsForValue().increment("promo_item_stock_" + itemId, amount.intValue());
             return false;
         }
     }
@@ -127,6 +146,16 @@ public class ItemServiceImpl implements ItemService {
         return itemModel;
     }
 
+    @Override
+    public ItemModel getItemByIdInCache(Integer id) {
+        ItemModel itemModel = (ItemModel) redisTemplate.opsForValue().get("item_validate_" + id);
+        if (itemModel == null) {
+            itemModel = this.getItemById(id);
+            redisTemplate.opsForValue().set("item_validate_" + id, itemModel);
+            redisTemplate.expire("item_validate_" + id, 10, TimeUnit.MINUTES);
+        }
+        return itemModel;
+    }
 
 
     private ItemModel convertModelFromDataObject(ItemDO itemDO,ItemStockDO itemStockDO){

@@ -2,11 +2,14 @@ package com.ysl.miaosha.service.impl;
 
 import com.ysl.miaosha.dao.PromoDOMapper;
 import com.ysl.miaosha.dataobject.PromoDO;
+import com.ysl.miaosha.service.ItemService;
 import com.ysl.miaosha.service.PromoService;
+import com.ysl.miaosha.service.model.ItemModel;
 import com.ysl.miaosha.service.model.PromoModel;
 import org.joda.time.DateTime;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -15,6 +18,10 @@ import java.math.BigDecimal;
 public class PromoServiceImpl implements PromoService {
     @Autowired
     private PromoDOMapper promoDOMapper;
+    @Autowired
+    private ItemService itemService;
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     @Override
     public PromoModel getPromoByItemId(Integer itemId) {
@@ -36,6 +43,18 @@ public class PromoServiceImpl implements PromoService {
         }
 
         return promoModel;
+    }
+
+    @Override
+    public void publishPromo(Integer promoId) {
+        //通过活动id获取活动
+        PromoDO promoDO = promoDOMapper.selectByPrimaryKey(promoId);
+        if (promoDO.getItemId() == null || promoDO.getItemId().intValue() == 0) {
+            return;
+        }
+        ItemModel itemModel = itemService.getItemById(promoDO.getItemId());
+        //将缓存同步到redis中
+        redisTemplate.opsForValue().set("promo_item_stock_" + itemModel.getId(), itemModel.getStock());
     }
 
     //dataobject->model

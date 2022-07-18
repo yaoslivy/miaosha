@@ -6,6 +6,7 @@ import com.ysl.miaosha.error.BusinessException;
 import com.ysl.miaosha.response.CommonReturnType;
 import com.ysl.miaosha.service.CacheService;
 import com.ysl.miaosha.service.ItemService;
+import com.ysl.miaosha.service.PromoService;
 import com.ysl.miaosha.service.model.ItemModel;
 import org.joda.time.format.DateTimeFormat;
 import org.springframework.beans.BeanUtils;
@@ -32,6 +33,9 @@ public class ItemController extends BaseController{
 
     @Autowired
     private CacheService cacheService;
+
+    @Autowired
+    private PromoService promoService;
 
     //列表页面浏览
     @RequestMapping(value = "/list",method = {RequestMethod.GET})
@@ -116,6 +120,12 @@ public class ItemController extends BaseController{
         }
         return itemVO;
     }
-
+    //
+    @RequestMapping(value = "/publishpromo", method = {RequestMethod.GET})
+    @ResponseBody
+    public CommonReturnType publishpromo(@RequestParam(name = "id") Integer id) {
+        promoService.publishPromo(id);
+        return CommonReturnType.create(null);
+    }
 }
 
