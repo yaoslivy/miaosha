@@ -120,7 +120,7 @@ public class ItemController extends BaseController{
         }
         return itemVO;
     }
-    //
+    //将初始化数据写入到redis中 http://localhost:8090/item/publishpromo?id=1
     @RequestMapping(value = "/publishpromo", method = {RequestMethod.GET})
     @ResponseBody
     public CommonReturnType publishpromo(@RequestParam(name = "id") Integer id) {
