@@ -37,7 +37,7 @@
 		<div class="form-group">
 			<label class="control-label">性别</label>
 			<div>
-				<input class="form-control" type="text" placeholder="性别" name="gender" id="gender">
+				<input class="form-control" type="text" placeholder="性别：0/1" name="gender" id="gender">
 			</div>
 		</div>
 		<div class="form-group">
@@ -83,12 +83,12 @@
                 alert("密码不能为空");
                 return false;
             }
-            if(age == null || age == ""){
+            if(age == null || age == "" ){
                 alert("年龄不能为空");
                 return false;
             }
-            if(gender == null || gender == ""){
-                alert("性别不能为空");
+            if(gender == null || gender == "" || gender.length != 1){
+                alert("性别错误");
                 return false;
             }
             if(name == null || name == ""){

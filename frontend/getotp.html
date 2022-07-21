@@ -38,8 +38,8 @@
         $("#getotp").on("click",function(){
             var telphone = $("#telphone").val();
             
-            if(telphone == null || telphone == ""){
-                alert("手机号不能为空");
+            if(telphone == null || telphone == "" || telphone.length != 11){
+                alert("手机号错误");
                 return false;
             }
             $.ajax({
@@ -52,7 +52,7 @@
                 xhrFields:{withCredentials:true},
                 success:function(data){
                     if(data.status == "success"){
-                        alert("otp已经发送到了手机，请注意查收");
+                        alert("otp已经发送到了手机，请注意查收，\n手机验证码为:"+data.data);
                         window.location.href="register.html";
                     } else {
                         alert("otp发送失败，原因为" + data.data.errMsg);

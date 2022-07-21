@@ -67,6 +67,13 @@
 				立即购买
 			</button>
 		</div>
+		<div id="verifyDiv" style="display: none;" class="form-actions">
+			<img src="" alt="" />
+			<input type="text" id="verifyContent" />
+			<button class="btn blue" id="verifyButton" type="submit">
+				验证
+			</button>
+		</div>
 	</div>
 </body>
 
@@ -96,15 +103,8 @@
 				alert("获取信息失败，原因为" + data.responseText);
 			}
 		});
-
-
-		$("#createOrder").on("click", function() {
-			var token = window.localStorage["token"];
-			if (token == null) {
-				alert("没有登陆，不能下单");
-				window.location.href="login.html";
-				return  false;
-			}
+		var token = window.localStorage["token"];
+		$("#verifyButton").on("click", function(){
 			$.ajax({
 				type: "POST",
 				url: "http://"+g_host+"/order/generatetoken?token=" + token,
@@ -112,6 +112,7 @@
 				data: {
 					"itemId": g_itemVO.id,
 					"promoId": g_itemVO.promoId,
+					"verifyCode":$("#verifyContent").val(),
 				},
 				xhrFields:{
 					withCredentials:true
@@ -159,6 +160,17 @@
 					
 				}
 			});
+		});
+		$("#createOrder").on("click", function() {
+			
+			if (token == null) {
+				alert("没有登陆，不能下单");
+				window.location.href="login.html";
+				return  false;
+			}
+			$("#verifyDiv img").attr("src","http://"+g_host+"/order/generateverifycode?token="+token);
+			$("#verifyDiv").show();
+			
 			
 		});
 

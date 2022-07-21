@@ -62,6 +62,7 @@ public class MqProducer {
                     orderService.createOrder(userId,itemId,promoId,amount, stockLogId);
                 } catch (BusinessException e) {
                     e.printStackTrace();
+                    //如果发生异常，createOrder已经回滚，此时要回滚事务型消息。
                     //设置对应的stockLog为回滚状态
                     StockLogDO stockLogDO = stockLogDOMapper.selectByPrimaryKey(stockLogId);
                     stockLogDO.setStatus(3);

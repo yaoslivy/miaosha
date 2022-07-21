@@ -91,10 +91,10 @@ public class OrderServiceImpl implements OrderService {
         //生成交易流水号,订单号
         orderModel.setId(generateOrderNo());
         OrderDO orderDO = convertFromOrderModel(orderModel);
+
         orderDOMapper.insertSelective(orderDO);
         //加上商品的销量
         itemService.increaseSales(itemId,amount);
-
         //设置库存流程状态为成功
         StockLogDO stockLogDO = stockLogDOMapper.selectByPrimaryKey(stockLogId);
         if (stockLogDO == null) {
@@ -115,14 +115,14 @@ public class OrderServiceImpl implements OrderService {
 //            public void afterCommit() {
 //                //异步更新库存, 若这段代码出现异常，数据库中的库存也无法更新
 //                boolean mqResult = itemService.asyncDecreaseStock(itemId, amount);
-////                if (!mqResult) {
-////                    itemService.increaseStock(itemId, amount);
-////                    try {
-////                        throw new BusinessException(EmBusinessError.MQ_SEND_FAIL);
-////                    } catch (BusinessException e) {
-////                        e.printStackTrace();
-////                    }
-////                }
+//                if (!mqResult) {
+//                    itemService.increaseStock(itemId, amount);
+//                    try {
+//                        throw new BusinessException(EmBusinessError.MQ_SEND_FAIL);
+//                    } catch (BusinessException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
 //            }
 //        });
 
